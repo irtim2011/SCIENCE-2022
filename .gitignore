@@ -30,3 +30,16 @@
 *.exe
 *.out
 *.app
+*.csv
+*.log
+*.tlog
+.vs/WATER/v16/.suo
+.vs/WATER/v16/ipch/AutoPCH/8c5e651c3e7308ae/MAIN.ipch
+.vs/WATER/v16/ipch/AutoPCH/e3877b04d72c63ed/MAIN.ipch
+*.opendb
+*.pdb
+*.ilk
+*.ipch
+*.enc
+*.idb
+*.db

@@ -7,7 +7,7 @@
 #include <cassert>
 #define pi 3.1415926
 
-using namespace std;
+using namespace std; //1112
 
 typedef vector <double> vec_t;
 vector <double> progonka(vec_t a,vec_t b, vec_t c, vec_t d, int n) {
@@ -42,6 +42,18 @@ vector <double> progonka(vec_t a,vec_t b, vec_t c, vec_t d, int n) {
 	}
 
 	return result_1;
+}
+
+bool check_progonka(vec_t a, vec_t b, vec_t c, vec_t d, vec_t x, int n) {
+	double constexpr eps = 1e-7;
+	for (int i = 0; i < n; i++) {
+		double res = x[i] * b[i];
+		if (i > 0) res += a[i] * x[i - 1];
+		if (i < (n - 1)) res += c[i] * x[i + 1];
+		if (abs(res - d[i]) > eps) 
+		{ return false; }
+	}
+	return true;
 }
 
 void test_progonka() {
@@ -159,6 +171,16 @@ vector<double> recompute(int N_y, double dx, double C_x, vector <double> uk, vec
 	//}
 	////result[N_y + 1] = result[N_y]; //dirty hack!!!!!!!!!!!!
 	vector <double> result = progonka(a, b, c, d, N_y + 2);
+	bool variable_check_progonka = check_progonka(a, b, c, d, result, N_y + 2);
+	if (!variable_check_progonka) { cout << "ERROR PROGONKA" << endl; exit(-1);}
+
+	for (int i = 1; i < N_y + 1; i++) {//Zatichka Jutkaia
+		if (result[i] < 0)
+		{
+			result[i] = 0;
+		}
+	}
+
 	return result;
 }
 //x_min *(u[0][4]*h[0][4] + u[0][3]*h[0][3])*(h[0][4] - h[0][3])
@@ -207,7 +229,7 @@ vector <double> h_recompute_alternative(double x_i, vector <double> u_old, vecto
 }
 
 void Solve_equation() {
-	const double x_min = 0.2;//last dot in x_setka could not equal(less) than x_max
+	const double x_min = 0.1;//last dot in x_setka could not equal(less) than x_max
 	const double x_max = 10;
 	const double dx = 0.01;
 	const int N_y = 24; //На один меньше чем число интервалов и на два меньше чем число точек
@@ -252,45 +274,16 @@ void Solve_equation() {
 		u[0][i] = U_0 * f_values[i];
 	}
 
-	//for (int i = 1; i < N_y + 2; i++) {
-		//u[0][i] = left_(eta[i], H, U_0);
-	/*u[0][1] = 0.10309229;
-	u[0][2] = 0.20482843;
-	u[0][3] = 0.30454179;
-	u[0][4] = 0.40192376;
-	u[0][5] = 0.49668576;
-	u[0][6] = 0.58855875;
-	u[0][7] = 0.67730007;
-	u[0][8] = 0.76266245;
-	u[0][9] = 0.84444513;
-	u[0][10] = 0.92243583;
-	u[0][11] = 0.99645099;
-	u[0][12] = 1.0663185;
-	u[0][13] = 1.13187199;
-	u[0][14] = 1.19297379;
-	u[0][15] = 1.24948048;
-	u[0][16] = 1.30127159;
-	u[0][17] = 1.34823237;
-	u[0][18] = 1.39025384;
-	u[0][19] = 1.42725569;
-	u[0][20] = 1.45914037;
-	u[0][21] = 1.48585054;
-	u[0][22] = 1.50730587;
-	u[0][23] = 1.52346621;
-	u[0][24] = 1.53427419;
-	u[0][25] = 1.53968965;
-	u[0][26] = 1.53968965;*/
-
-//}
-
 	const vector <double> q = init_q_alternative(x_min, u[0], eta);
 
 	vector <double> u_old(N_y + 2);
 	vector <double> u_new(N_y + 2);
 
 	vector< vector <double> > h(N_x + 2, vector<double>(N_y + 2));
-	double D = -1 / U_0 + 1.814 * x_min * x_min * x_min / 3;
-	double h_0 = 1.814 * x_min * x_min / 3 + D / x_min;
+	double D = -1 / U_0 - 1.814 * x_min * x_min * x_min / 3;
+	double h_0 = 1.814 * x_min * x_min / 3 - D / x_min;
+
+	cout << "D= " << D << " h_0= " << h_0 << endl;
 	
 	for (int i = 0; i < N_y + 2; i++) {
 		h[0][i] = eta[i] * h_0;
@@ -308,9 +301,12 @@ void Solve_equation() {
 		u_old = u[k];
 		u_old[N_y + 1] = u_old[N_y]; //DIRTY HACK
 		//h_old = h[k];
-		for (int i = 0; i < N_y + 2; i++){
-			h_old[i] = (1.814 * x_setka[k + 1] * x_setka[k + 1] / 3 + D / x_setka[k + 1]) * eta[i];
+		for (int i = 0; i < N_y + 2; i++) {
+			h_old[i] = (1.814 * x_setka[k + 1] * x_setka[k + 1] / 3 - D / x_setka[k + 1]) * eta[i];
+			if (h_old[i] < 0) { cout << "ERROR line 305" << endl;
+			exit(-2); }
 		}
+		int iter_whl = 0;
 		while (discrepancy > 0.00000001) {
 			//-dh / dx + alpha * x
 			double dh = h_old[N_y + 1] - h[k][N_y + 1];
@@ -334,7 +330,9 @@ void Solve_equation() {
 
 			u_old = u_new;
 			//h_old = h_new;
+			iter_whl += 1;
 		}
+		int aa = 0;
 		/*bool check = check_invariant(x_setka[k + 1], u_new, q, h_old);
 		if (!check)
 		{
