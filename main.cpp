@@ -233,7 +233,7 @@ void Solve_equation() {
 	const double x_max = 10;
 	const double dx = 0.01;
 	const int N_y = 24; //На один меньше чем число интервалов и на два меньше чем число точек
-	//число внутренних точек разбиения не учитывая концы
+	//число внутренних точек разбиения не учитывая концы //
 	const double y_min = 0;
 
 	int N_x = round((x_max - x_min) / dx - 1); //На один меньше чем число интервалов и на два меньше чем число точек
@@ -280,7 +280,7 @@ void Solve_equation() {
 	vector <double> u_new(N_y + 2);
 
 	vector< vector <double> > h(N_x + 2, vector<double>(N_y + 2));
-	double D = -1 / U_0 - 1.814 * x_min * x_min * x_min / 3;
+	double D = -1 / U_0 + 1.814 * x_min * x_min * x_min / 3;
 	double h_0 = 1.814 * x_min * x_min / 3 - D / x_min;
 
 	cout << "D= " << D << " h_0= " << h_0 << endl;
