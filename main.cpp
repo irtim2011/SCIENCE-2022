@@ -315,9 +315,12 @@ void Solve_equation() {
 			u_new = recompute(N_y, dx, C_x, u[k], u_old, 0, h_old);//to do u_new[N_y + 1] не вычисляется 
 			u_new[0] = u[k + 1][0];
 
+			//cout << "pon" << endl;
 			for (int i = 1; i < N_y + 1; i++) {//Zatichka Jutkaia
 				if (u_new[i] < 0) 
-				{ u_new[i] = 0.001;}
+				{
+					cout << "zatichka" << endl;
+					u_new[i] = 9999;}
 			}
 			//u_new[N_y + 1] = u[k + 1][N_y + 1]; //to do  zasynyt v recompute i razobratsya
 			////h_new = h_recompute(x_setka[k + 1], u_new, q);
