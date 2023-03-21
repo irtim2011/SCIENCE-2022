@@ -103,7 +103,7 @@ return q;
 }
 //L -- u_x = L(u) * u_yy
 double L(double u) {
-	return 1;
+	return 1/u;
 }
 
 double left_(double eta, double H, double U_0) {
@@ -187,6 +187,7 @@ vector<double> recompute(int N_y, double dx, double C_x, vector <double> uk, vec
 // x_i = ksi (на каждом i-ом слое)
 vector <double> h_recompute(double x_i, vector <double> u_new,vector <double> q) {
 	int N = q.size();
+	double q_sum = 0;
 	vector <double> h_new(N + 1);// to do
 	h_new[0] = 0;
 	for (int n = 0; n < N; n++) {
@@ -196,7 +197,7 @@ vector <double> h_recompute(double x_i, vector <double> u_new,vector <double> q)
 		//double D = b * b - 4 * a * c;
 		//if (a < 0) { h_new[n + 1] = -c / b;}
 		//else { h_new[n + 1] = (-b + sqrt(D)) / 2 / a; }
-
+		q_sum += q[n];
 		h_new[n + 1] = 2. * q[n] / (x_i * (u_new[n + 1] + u_new[n])) + h_new[n];
 	}
 	return h_new;
@@ -230,9 +231,9 @@ vector <double> h_recompute_alternative(double x_i, vector <double> u_old, vecto
 
 void Solve_equation() {
 	const double x_min = 0.1;//last dot in x_setka could not equal(less) than x_max
-	const double x_max = 10;
-	const double dx = 0.01;
-	const int N_y = 24; //На один меньше чем число интервалов и на два меньше чем число точек
+	const double x_max = 1;
+	const double dx = 0.005;
+	const int N_y = 200; //На один меньше чем число интервалов и на два меньше чем число точек
 	//число внутренних точек разбиения не учитывая концы //
 	const double y_min = 0;
 
@@ -280,8 +281,17 @@ void Solve_equation() {
 	vector <double> u_new(N_y + 2);
 
 	vector< vector <double> > h(N_x + 2, vector<double>(N_y + 2));
-	double D = -1 / U_0 + 1.814 * x_min * x_min * x_min / 3;
-	double h_0 = 1.814 * x_min * x_min / 3 - D / x_min;
+	//double D = -1 / U_0 + 1.814 * x_min * x_min * x_min / 3;
+	
+	
+	//double D = -1 / U_0 - 1.814 * x_min * x_min * x_min / 3;
+	//double h_0 = -1.814 * x_min * x_min / 3 - D / x_min;
+
+	double c = -1.814;
+	double D = -1 / U_0 - c * x_min * x_min * x_min / 3;
+	double h_0 =  -c * x_min * x_min / 3 - D / x_min;
+
+	cout << "h_0 correct=" << 1 / U_0 / x_min;
 
 	cout << "D= " << D << " h_0= " << h_0 << endl;
 	
@@ -323,18 +333,21 @@ void Solve_equation() {
 					u_new[i] = 9999;}
 			}
 			//u_new[N_y + 1] = u[k + 1][N_y + 1]; //to do  zasynyt v recompute i razobratsya
-			////h_new = h_recompute(x_setka[k + 1], u_new, q);
+			h_new = h_recompute(x_setka[k + 1], u_old, q);
 			//h_new = h_recompute(x_setka[k], u_new, q); //there are doubts about what recompute first u_new or h_new
 			//h_new = h_recompute_alternative(x_setka[k], u_old, q); // funcan <u_old, h_old> --> <u_new, h_new> 
 																   // Почему оператор сжимающий? 
 			double dist1 = distance_L2(u_old, u_new);
-			//double dist2 = distance_L2(h_old, h_new);
-			discrepancy = distance_L2(u_old, u_new);
+			double dist2 = distance_L2(h_old, h_new);
+			//discrepancy = distance_L2(u_old, u_new);
+			discrepancy = dist1 + dist2;
 
 			u_old = u_new;
-			//h_old = h_new;
+			h_old = h_new;
 			iter_whl += 1;
 		}
+		//cout << ' ' << u_new[10] << ' ' << u_new[25] << endl;
+		if (k == 50) { for (double a : u_new) cout << a << endl; }
 		int aa = 0;
 		/*bool check = check_invariant(x_setka[k + 1], u_new, q, h_old);
 		if (!check)
@@ -342,6 +355,11 @@ void Solve_equation() {
 			cout << "BADBADBAD";
 		}*/
 		//end of whle cycle
+		for (int i_ = 0; i_ < N_y; i_++) {
+			if (isnan(u_new[i_])) {
+				int nenn = 1;
+			}
+		}
 		u[k + 1] = u_new;
 		h[k + 1] = h_old;
 
@@ -379,7 +397,7 @@ void Solve_equation() {
 
 
 int main() {
-	cout << "YAYAAYYAYAY";
+	cout << "Water started";
 	//test_progonka();
 	Solve_equation();
 	return 0;
